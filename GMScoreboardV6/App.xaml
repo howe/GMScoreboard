@@ -1,0 +1,578 @@
+﻿<Application x:Class="GMScoreboardV6.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:com="clr-namespace:GMScoreboardV6.Com"
+             StartupUri="MainWindow.xaml"
+             Startup="Application_Startup" Exit="Application_Exit"
+             DispatcherUnhandledException="Application_DispatcherUnhandledException">
+    <Application.Resources>
+        <ImageBrush x:Key="bgImg" ImageSource="ResUI\bg.png"/>
+        <ImageBrush x:Key="selectedBrush" ImageSource="ResUI\tabClicked.png"/>
+        <ImageBrush x:Key="overBrush" ImageSource="ResUI\tabHover.png"/>
+
+        <Style x:Key="ImgButton" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter x:Name="contentBox"/>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter Property="Opacity" TargetName="contentBox" Value="0.8"/>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter Property="Opacity" TargetName="contentBox" Value="0.7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style x:Key="ImgTabItem" TargetType="com:ImgTabItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="com:ImgTabItem">
+                        <Grid VerticalAlignment="Center" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}"
+                              Cursor="Hand">
+                            <Grid.Background>
+                                <SolidColorBrush Color="#FF962E" Opacity="0.3"/>
+                            </Grid.Background>
+
+                            <Grid x:Name="HeaderPanel">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="56"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <Image x:Name="image" Source="{Binding Path=Icon,RelativeSource={RelativeSource AncestorType={x:Type com:ImgTabItem}}}"
+                                       Margin="0,2,0,0" Stretch="None" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <Image.Clip>
+                                        <RectangleGeometry>
+                                            <RectangleGeometry.Rect>
+                                                <Rect X="0" Y="0" Width="22" Height="22"/>
+                                            </RectangleGeometry.Rect>
+                                        </RectangleGeometry>
+                                    </Image.Clip>
+                                </Image>
+
+                                <TextBlock x:Name="title" Grid.Row="1" Text="{Binding Path=Title,RelativeSource={RelativeSource AncestorType={x:Type com:ImgTabItem}}}"
+                                           Margin="0,-32,0,0" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#FF962E"/>
+                            </Grid>
+                        </Grid>
+                        
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="HeaderPanel" Property="Background" Value="{StaticResource overBrush}"/>
+                            </Trigger>
+                            
+                            <Trigger Property="Selector.IsSelected" Value="true">
+                                <Setter TargetName="HeaderPanel" Property="Background" Value="{StaticResource selectedBrush}"/>
+                                <Setter TargetName="image" Property="Clip">
+                                    <Setter.Value>
+                                        <RectangleGeometry>
+                                            <RectangleGeometry.Rect>
+                                                <Rect X="0" Y="23" Width="22" Height="22"/>
+                                            </RectangleGeometry.Rect>
+                                        </RectangleGeometry>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter TargetName="image" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <TranslateTransform X="0" Y="-22"/>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter TargetName="title" Property="Foreground" Value="#333333"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="tabThumb" TargetType="Thumb">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Rectangle x:Name="thumbBox" Fill="#666666" RadiusX="2" RadiusY="2"/>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter Property="Opacity" TargetName="thumbBox" Value="0.8"/>
+                                <Setter Property="Cursor" TargetName="thumbBox" Value="Hand"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style x:Key="tabScrollBar" TargetType="ScrollBar">
+            <Setter Property="Stylus.IsPressAndHoldEnabled" Value="False"/>
+            <Setter Property="Stylus.IsFlicksEnabled" Value="False"/>
+            <Setter Property="Width" Value="4"/>
+            <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Track x:Name="PART_Track" IsDirectionReversed="True">
+                            <Track.Thumb>
+                                <Thumb Style="{StaticResource tabThumb}"/>
+                            </Track.Thumb>
+                        </Track>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Orientation" Value="Horizontal">
+                                <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="false"/>
+                                <Setter Property="Width" Value="auto"/>
+                                <Setter Property="Height" Value="4"/>
+                                <Setter Property="MinHeight" Value="0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!--自定义滚动条列表样式-->
+        <Style x:Key="prizeListBox" TargetType="ItemsControl">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ItemsControl">
+                        <ScrollViewer>
+                            <ItemsPresenter/>
+
+                            <ScrollViewer.Template>
+                                <ControlTemplate TargetType="ScrollViewer">
+                                    <Grid Background="{TemplateBinding Background}">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="1*"/>
+                                            <RowDefinition Height="auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" CanContentScroll="{TemplateBinding CanContentScroll}"
+                                                                CanHorizontallyScroll="False" CanVerticallyScroll="False"
+                                                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                                Content="{TemplateBinding Content}"/>
+
+                                        <ScrollBar x:Name="PART_VerticalScrollBar" ViewportSize="{TemplateBinding ViewportHeight}"
+                                                   Grid.Column="1" Minimum="0" Maximum="{TemplateBinding ScrollableHeight}"
+                                                   Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                                   Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                                   Style="{StaticResource tabScrollBar}"/>
+
+                                        <ScrollBar x:Name="PART_HorizontalScrollBar" ViewportSize="{TemplateBinding ViewportWidth}"
+                                                   Grid.Row="1" Minimum="0" Maximum="{TemplateBinding ScrollableWidth}"
+                                                   Orientation="Horizontal" Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                                                   Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                                   Style="{StaticResource tabScrollBar}"/>
+                                    </Grid>
+                                </ControlTemplate>
+                            </ScrollViewer.Template>
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!--奖励列表Item样式-->
+        <DataTemplate x:Key="bigPrize">
+            <Grid Margin="0,0,0,10">
+                <Grid.Background>
+                    <SolidColorBrush Color="#333333" Opacity="0.6"/>
+                </Grid.Background>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Margin="5,10,0,5">
+                    <Image Width="90" Height="82" Source="{Binding awardImage}"/>
+                    <TextBlock HorizontalAlignment="Center" Text="{Binding title}" Foreground="{Binding color}"
+                               FontSize="15" FontWeight="Bold"/>
+                </StackPanel>
+
+                <StackPanel Margin="5,10,10,5" Grid.Column="1">
+                    <TextBlock Margin="0,5,0,0" Text="{Binding prizeName}" TextWrapping="Wrap"
+                               Foreground="#FE952E" FontSize="18" FontWeight="Bold" LineHeight="2"/>
+                    <TextBlock Margin="0,5,0,0" Text="{Binding condition}" TextWrapping="Wrap" 
+                               Foreground="#CCCCCC" LineHeight="2"/>
+                    <TextBlock Margin="0,5,0,0" Text="{Binding content}" TextWrapping="Wrap"
+                               Foreground="#666666" LineHeight="2"/>
+                    <Button Name="btnCheckRank"
+                        Cursor="Hand" 
+                        HorizontalAlignment="Right" 
+                        Background="#333333" 
+                        Opacity="0.6" 
+                        Style="{StaticResource ImgButton}"
+                        Click="btnCheckRank_Click"
+                        >
+                        <TextBlock Margin="0,5,0,0" Text="查看排行榜" Foreground="#CCCCCC" HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" FontWeight="Bold" FontSize="12"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+        
+        <!--获奖列表Item样式-->
+        <DataTemplate x:Key="smallPrize">
+            <Grid Margin="0,0,5,10">
+                <Grid.Background>
+                    <SolidColorBrush Color="#333333" Opacity="0.6"/>
+                </Grid.Background>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <Image Margin="15,15,15,15" Width="48" Height="48" Source="{Binding avatar}"
+                       VerticalAlignment="Top">
+                    <Image.Clip>
+                        <EllipseGeometry  Center="24,24" RadiusX="24" RadiusY="24"/>
+                    </Image.Clip>
+                </Image>
+
+                <Grid Margin="5,15,10,10" Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="1*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="{Binding playerName}" Foreground="#888888" HorizontalAlignment="Left" FontWeight="Bold"/>
+                        <TextBlock Grid.Column="1" Text="{Binding createTime}" Foreground="#666666" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" Margin="0,12,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Image HorizontalAlignment="Left" Width="52" Height="56" Source="{Binding awardImage}" 
+                               VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding ruleName}" Foreground="#FE952E" FontSize="18"
+                                   FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Left"
+                                   Margin="10,0,0,0" LineHeight="2"/>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+        
+        <!--属于自己获奖列表Item样式-->
+        <DataTemplate x:Key="mySmallPrize">
+            <Border Margin="0,0,5,10" BorderBrush="#8A5424" BorderThickness="2">
+                <Grid>
+                    <Grid.Background>
+                        <SolidColorBrush Color="#333333" Opacity="0.6"/>
+                    </Grid.Background>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Image Margin="15,15,15,15" Width="48" Height="48" Source="{Binding avatar}"
+                       VerticalAlignment="Top">
+                        <Image.Clip>
+                            <EllipseGeometry  Center="24,24" RadiusX="24" RadiusY="24"/>
+                        </Image.Clip>
+                    </Image>
+
+                    <Grid Margin="5,15,10,10" Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="{Binding playerName}" Foreground="#888888" HorizontalAlignment="Left" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="1" Text="{Binding createTime}" Foreground="#666666" HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <Grid Grid.Row="1" Margin="0,12,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Image HorizontalAlignment="Left" Width="52" Height="56" Source="{Binding awardImage}" 
+                                   VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ruleName}" Foreground="#FE952E" FontSize="18"
+                                       FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Left"
+                                       Margin="10,0,0,0" LineHeight="2"/>
+                        </Grid>
+                    </Grid>
+
+                    <Button Margin="0,0,0,10" Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource ImgButton}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center" Cursor="Hand" Click="GetAward_Click">
+                        <Grid Width="292" Height="42" Background="#FF962E">
+                            <TextBlock Text="领取奖励" Foreground="#333333" HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" FontWeight="Bold" FontSize="18"/>
+                        </Grid>
+                    </Button>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--我的奖励列表Item样式-->
+        <DataTemplate x:Key="MybigPrize">
+            <Grid Margin="0,0,5,10">
+                <Grid.Background>
+                    <SolidColorBrush Color="#333333" Opacity="0.6"/>
+                </Grid.Background>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <Image 
+                    HorizontalAlignment="Center"
+                    Margin="15,15,15,15" Width="48" Height="48" Source="{Binding heroImage}" ToolTip="{Binding heroImageToolTip}"
+                       VerticalAlignment="Center">
+                    <Image.Clip>
+                        <EllipseGeometry  Center="24,24" RadiusX="24" RadiusY="24"/>
+                    </Image.Clip>
+                </Image>
+
+                <Grid Margin="5,15,10,10" Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="1*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="{Binding playerName}" Foreground="#888888" HorizontalAlignment="Left" FontWeight="Bold"/>
+                        <TextBlock Grid.Column="1" Text="{Binding ShowCreateTime}" Foreground="#666666" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1" Margin="0,12,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Image HorizontalAlignment="Left" Width="52" Height="56" Source="{Binding awardImage}" 
+                               VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding ruleName}" Foreground="#FE952E" FontSize="18"
+                                   FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Left"
+                                   Margin="10,0,0,0" LineHeight="2"/>
+                        <Button 
+                            Visibility="{Binding IsGetAward}" 
+                            Margin="0,0,0,10"  Grid.Column="2" Style="{StaticResource ImgButton}"
+                            HorizontalAlignment="Right" VerticalAlignment="Bottom" Cursor="Hand" Click="GetAward_Click">
+                            <Grid Width="65" Height="22" Background="#FF962E">
+                                <TextBlock Text="领取奖励" Foreground="#333333" HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" FontWeight="Bold" FontSize="14"/>
+                            </Grid>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <!--动态消息Item样式-->
+        <DataTemplate x:Key="MyChart">
+            <Grid Margin="0,0,5,10">
+                <Grid.Background>
+                    <SolidColorBrush Color="#333333" Opacity="0.6"/>
+                </Grid.Background>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Image Grid.Column="0" VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Width="48" Height="48" 
+                    Source="{Binding useImage}">
+                        <Image.Clip>
+                            <EllipseGeometry  Center="24,24" RadiusX="24" RadiusY="24"/>
+                        </Image.Clip>
+                    </Image>
+                    <Label 
+                            Foreground="#FF575758" 
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Content="{Binding Sate}"
+                            />
+                </StackPanel>
+
+                <Grid Margin="5,15,10,10" Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="1*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Foreground="{Binding MessageColoe}" Text="{Binding MessageTitle}"></TextBlock>
+
+                    <StackPanel Grid.Row="1">
+                        <com:TextBlockRun RunList="{Binding runList}" TextWrapping="Wrap" >
+                        </com:TextBlockRun>
+                    </StackPanel>
+
+                    <Label  Foreground="#999999"  Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Center">刚刚</Label>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+        
+        <!--在线人数Item样式-->
+        <DataTemplate x:Key="MyOnLine">
+            <Grid Margin="0,0,5,10">
+                <Grid.Background>
+                    <SolidColorBrush Color="#333333" Opacity="0.6"/>
+                </Grid.Background>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Margin="10,0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Image VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Width="48" Height="48" 
+                    Source="{Binding avatar}" >
+                        <Image.Clip>
+                            <EllipseGeometry  Center="24,24" RadiusX="24" RadiusY="24"/>
+                        </Image.Clip>
+                    </Image>
+                    <Ellipse Fill="#FF2CB54C" Stretch="Fill" Width="15" Height="15" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,-15,0,0" />
+                </StackPanel>
+
+                <Grid Margin="5,15,10,10" Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition  />
+                        <RowDefinition />
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="70*"/>
+                        <ColumnDefinition Width="30*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBlock Grid.Row="0" 
+                               TextWrapping="Wrap"
+                               Grid.Column="0" 
+                               HorizontalAlignment="Left" 
+                               VerticalAlignment="Center" 
+                               Foreground="#FFD5D5D6" 
+                               Text="{Binding playerName}" 
+                               Margin="0,2"/>
+                    
+                    <TextBlock 
+                               Grid.Row="0" 
+                               Grid.Column="1" 
+                               HorizontalAlignment="Right" 
+                               VerticalAlignment="Center" 
+                               Foreground="#FF2CB54C" 
+                               Text="在线" 
+                               Margin="0,2"/>
+
+                    <com:TextBlockRun Grid.Row="1" Grid.Column="0"  TextWrapping="Wrap"
+                               Margin="0,5"  RunList="{Binding ShowServerNameRun}" />
+                    
+                    <!--<com.TextBlockRun Grid.Row="1" Grid.Column="0"  
+                               Margin="0,5"  >                       
+                               --><!--<Run Name="serverName" Foreground="#FFFF962E"  Text="{Binding serverName}"></Run>
+                               <Run Name="titer" Foreground="#FFFF962E" Text="{Binding tier}"></Run>-->
+                    <!--<TextBlock Margin="0,2" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Center"  HorizontalAlignment="Left" Foreground="#FFFF962E" Text="{Binding hostName}" ></TextBlock>-->
+                    
+                </Grid>
+            </Grid>
+        </DataTemplate>
+    </Application.Resources>
+</Application>

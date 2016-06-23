@@ -1,0 +1,75 @@
+﻿<Window x:Class="GMScoreboardV6.MyAward"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GMScoreboardV6"
+        mc:Ignorable="d"
+        Title="我的奖励" Height="452" Width="300" ShowInTaskbar="False" 
+        ResizeMode="NoResize" WindowStyle="None"
+         Loaded="Window_Loaded"
+        >
+    <Canvas x:Name="bgLayer">
+        <Grid x:Name="headBox" Height="32" Width="{Binding ElementName=bgLayer, Path=ActualWidth}">
+            <Grid.Background>
+                <SolidColorBrush Color="#FF2D2D2D" Opacity="100"/>
+            </Grid.Background>
+
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="10"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock x:Name="title" Grid.Column="1" Text="我的奖励" FontSize="12" Foreground="#666666"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <Button x:Name="closeBtn" Grid.Column="2" 
+                    Click="Close_Click" 
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center" 
+                    Margin="0,0,0,0"
+                    Style="{StaticResource ImgButton}" Grid.ColumnSpan="2">
+                <Button.Content>
+                    <Image Source="ResUI\closebtnNoPrize.png"  Name="img_close" Stretch="Fill"  Cursor="Hand" MouseMove="Image_MouseMove"  MouseLeave="Image_MouseLeave" Width="32" Height="32" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                </Button.Content>
+            </Button>
+        </Grid>
+        
+       
+        <Grid x:Name="userBox" Height="420" Width="{Binding ElementName=bgLayer, Path=ActualWidth}" Canvas.Top="32" >
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.Background>
+                <SolidColorBrush Color="#FF2D2D2D" Opacity="100"/>
+            </Grid.Background>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <ItemsControl x:Name="prizeBox" Style="{StaticResource prizeListBox}"
+                                  ItemTemplate="{StaticResource MybigPrize}"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+
+            
+            <Image Source="ResUI\noPrize.png" 
+                    Height="32" 
+                   Width="32" 
+                   Margin="-0,-45,0,0" 
+                   HorizontalAlignment="Center" 
+                   VerticalAlignment="Center" Name="imgNoPrize" />
+            
+            <TextBlock x:Name="txtNoPrize" Grid.Column="0"  Text="暂无奖励" FontSize="12" 
+                       Margin="0,10,0,0" Foreground="#999999" 
+                       FontWeight="Bold" 
+                       HorizontalAlignment="Center" 
+                       VerticalAlignment="Center" Visibility="Visible"/>
+        </Grid>
+    </Canvas>
+</Window>

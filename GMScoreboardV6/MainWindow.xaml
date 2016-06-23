@@ -1,0 +1,148 @@
+﻿<Window x:Class="GMScoreboardV6.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:selector="clr-namespace:GMScoreboardV6.Selector"
+        xmlns:com="clr-namespace:GMScoreboardV6.Com"
+        Title="竞技大师"
+        Icon="Resources/jule.ico"
+        Width="342" Height ="718"
+        ResizeMode="NoResize"
+        WindowStyle="None" ShowInTaskbar="False"
+        Background="{StaticResource bgImg}"
+        Loaded="Window_Loaded">
+    <Canvas x:Name="bgLayer">
+        <Grid x:Name="headBox" Height="42" Width="{Binding ElementName=bgLayer, Path=ActualWidth}" MouseLeftButtonDown="Window_MouseLeftButtonDown">
+            <Grid.Background>
+                <SolidColorBrush Color="#666666" Opacity="0.15"/>
+            </Grid.Background>
+
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="10"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock x:Name="barName" Grid.Column="0" Margin="10,0,0,0" Text="竞技大师" FontSize="12" Foreground="#999999" 
+                       FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+
+            <TextBlock x:Name="hostName" Grid.Column="1" Text="9527" FontSize="12" Foreground="#666666"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            
+            <StackPanel Orientation="Horizontal" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button x:Name="giftBtn" Style="{StaticResource ImgButton}" Cursor="Hand" Click="giftBtn_Click">
+                    <Button.Content>
+                        <Image Source="ResUI\giftBtn.png" Stretch="None"/>
+                    </Button.Content>
+                </Button>
+            </StackPanel>
+            
+            <Button x:Name="closeBtn" Grid.Column="3" Click="Close_Click" HorizontalAlignment="Right"
+                    VerticalAlignment="Center" Style="{StaticResource ImgButton}">
+                <Button.Content>
+                    <Image Source="ResUI\closeBtn.png" Stretch="None"/>
+                </Button.Content>
+            </Button>
+        </Grid>
+
+        <Grid x:Name="userBox" Canvas.Top="42" Height="60" Width="{Binding ElementName=bgLayer, Path=ActualWidth}">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="10,0,0,0">
+                <Image x:Name="faceBox" Source="http://gmaster.youzijie.com/img/nb-center/defaultAvatar.png"
+                       Width="48" Height="48">
+                    <Image.Clip>
+                        <EllipseGeometry  Center="24,24" RadiusX="24" RadiusY="24"/>
+                    </Image.Clip>
+                </Image>
+
+                <TextBlock x:Name="nickBox" Margin="5,0,0,0" Text="游戏高手" Foreground="#CCCCCC"
+                           ToolTip="{Binding Text,ElementName=nickBox}" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" Cursor="Hand" ToolTip="查看个人中心"
+                            MouseLeftButtonUp="person_MouseLeftButtonUp">
+                    <Image Source="ResUI\userInfo.png" Stretch="None"/>
+
+                    <TextBlock Margin="5,0,0,0" Text="个人中心" Foreground="#CCCCCC" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Cursor="Hand" Margin="10,0,10,0" ToolTip="充值金币"
+                            MouseLeftButtonUp="person_MouseLeftButtonUp">
+                    <Image Source="ResUI\gold.png" Width="19" Height="19" Stretch="None"/>
+
+                    <TextBlock x:Name="goldBox" Margin="5,0,10,0" Text="999,999,999" Foreground="#ECB447"
+                               FontWeight="Bold" VerticalAlignment="Center"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <Grid x:Name="tabBox" Canvas.Top="102" Height="616" Width="{Binding ElementName=bgLayer, Path=ActualWidth}">
+            <TabControl x:Name="tabControl" Margin="10,0,10,10">
+                <TabControl.Template>
+                    <ControlTemplate>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="56"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel x:Name="HeaderPanel" Grid.Row="0" IsItemsHost="True" Orientation="Horizontal"/>
+                            <ContentPresenter Grid.Row="1" Margin="0,10,0,0" Content="{TemplateBinding TabControl.SelectedContent}"
+                                              ContentSource="SelectedContent"/>
+                        </Grid>
+                    </ControlTemplate>
+                </TabControl.Template>
+
+                <TabControl.Resources>
+                    <com:ImgTabItem x:Key="chatTab" x:Name="chatTab" Style="{StaticResource ImgTabItem}" Width="81" Height="56"
+                                    Title="聊天室" Icon="ResUI\tabbar\chatroom.png">
+                        <WebBrowser x:Name="chatWeb" Navigating="WebBrowser_Navigating"/>
+                    </com:ImgTabItem>
+
+                    <com:ImgTabItem x:Key="prizeTab" x:Name="prizeTab" Style="{StaticResource ImgTabItem}" Width="81" Height="56"
+                                    Title="活动奖励" Icon="ResUI\tabbar\prize.png">
+                        <ItemsControl x:Name="prizeBox" Style="{StaticResource prizeListBox}"
+                                  ItemTemplate="{StaticResource bigPrize}"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+                    </com:ImgTabItem>
+
+                    <com:ImgTabItem x:Key="awardTab" x:Name="awardTab" Style="{StaticResource ImgTabItem}" Width="81" Height="56"
+                                    Title="获奖玩家" Icon="ResUI\tabbar\award.png">
+                        <ItemsControl x:Name="awardBox" Style="{StaticResource prizeListBox}"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl.ItemTemplateSelector>
+                                <selector:SmallSelector NormalTemplate="{StaticResource smallPrize}"
+                                                    MyAwardTemplate="{StaticResource mySmallPrize}"/>
+                            </ItemsControl.ItemTemplateSelector>
+                        </ItemsControl>
+                    </com:ImgTabItem>
+
+                    <com:ImgTabItem x:Key="lotteryTab" x:Name="lotteryTab" Style="{StaticResource ImgTabItem}" Width="81" Height="56"
+                                    Title="全民夺宝" Icon="ResUI\tabbar\lottery.png">
+                        <WebBrowser x:Name="lotteryWeb" Navigating="WebBrowser_Navigating"/>
+                    </com:ImgTabItem>
+                </TabControl.Resources>
+            </TabControl>
+        </Grid>
+    </Canvas>
+</Window>
